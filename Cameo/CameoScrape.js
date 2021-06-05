@@ -63,6 +63,7 @@ puppeteer.launch({ headless: false }).then(async browser => {
 	await browser.close();
 });
 
+// For images, not working.
 // let images = await page.$$eval(
 // 	'.Styled__StarcardGrid-sc-79dgm2-0.iLhTvt .Styled__Wrapper-sc-116g1k2-1.hNSzko img',
 // 	imgs => imgs.map(img => ({ title: item.alt, img: item.src }))
