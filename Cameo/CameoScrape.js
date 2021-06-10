@@ -4,7 +4,7 @@ const FileSystem = require('fs');
 const categories = require('./categories');
 puppeteer.use(StealthPlugin());
 
-puppeteer.launch({ headless: false }).then(async browser => {
+puppeteer.launch().then(async browser => {
 	const page = await browser.newPage();
 
 	const totalResults = {
@@ -30,7 +30,7 @@ puppeteer.launch({ headless: false }).then(async browser => {
 					`https://www.cameo.com/browse/${key}/${categories[key][i]}?nextToken=${counter}`,
 					{ waitUntil: 'load', timeout: 0 }
 				);
-				await page.waitFor(2000);
+				await page.waitFor(1300);
 
 				// Gets all celebs' names
 				let celebs = await page.$$eval(
@@ -38,8 +38,21 @@ puppeteer.launch({ headless: false }).then(async browser => {
 					names => names.map(name => name.innerHTML)
 				);
 
+				// Get all celebs' prices
+				let totalPrices = await page.$$eval(
+					'.Styled__StarcardGrid-sc-79dgm2-0.iLhTvt .Styled__FooterContainer-sc-116g1k2-16.iuNkrn .Styled__BottomRowContainer-sc-116g1k2-21.jALSOf .Styled__FromPriceContainer-sc-116g1k2-24.ewWkSU .Styled__PriceContainer-sc-116g1k2-13.ftKQdq span',
+					prices => prices.map(price => price.innerHTML)
+				);
+
 				// Pushes results into subcategory's array
-				totalResults[key][categories[key][i]].push(...celebs);
+				// Loops through celebs and totalPrices to create objects with pairs.
+				for (let j = 0; j < totalPrices.length; j++) {
+					totalResults[key][categories[key][i]].push({
+						name: celebs[j],
+						price: totalPrices[j]
+					});
+					console.log({ name: celebs[j], price: totalPrices[j] });
+				}
 
 				// Counter to go to next page.
 				counter += 40;
@@ -57,9 +70,13 @@ puppeteer.launch({ headless: false }).then(async browser => {
 	}
 
 	// Creates JSON file w/ results
-	FileSystem.writeFile('Cameo.json', JSON.stringify(totalResults), error => {
-		if (error) throw error;
-	});
+	FileSystem.writeFile(
+		'newCameo_Prices.json',
+		JSON.stringify(totalResults),
+		error => {
+			if (error) throw error;
+		}
+	);
 	await browser.close();
 });
 
